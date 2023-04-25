@@ -18,9 +18,7 @@ import uc.seng301.cardbattler.asg3.accessor.PlayerAccessor;
 import uc.seng301.cardbattler.asg3.cards.CardGenerator;
 import uc.seng301.cardbattler.asg3.cards.CardProxy;
 import uc.seng301.cardbattler.asg3.cli.CommandLineInterface;
-import uc.seng301.cardbattler.asg3.model.Card;
-import uc.seng301.cardbattler.asg3.model.Deck;
-import uc.seng301.cardbattler.asg3.model.Player;
+import uc.seng301.cardbattler.asg3.model.*;
 
 /**
  * Main game loop functionality for application
@@ -32,13 +30,37 @@ public class Game {
     private final DeckAccessor deckAccessor;
     private final CardAccessor cardAccessor;
     private final CardGenerator cardGenerator;
+
     private final BattleDeckCreator battleDeckCreator;
+
+    private GameBoard board;
+
+    /**
+     * To be only used in testing.
+     * @return the current board for the game.
+     * */
+    public GameBoard getBoard() {
+        return board;
+    }
+
+    /**
+     * To be only used in testing.
+     * @return the current BattleDeckCreator.
+     * */
+    public BattleDeckCreator getBattleDeckCreator() {
+        return battleDeckCreator;
+    }
 
     private String welcomeMessage = """
             ######################################################
                          Welcome to Yu-Gi-Oh! Clone App
             ######################################################""";
 
+    /**
+     * case "play_start" -> play(input);
+     *                 case "play_show_cards" -> playingShowCards();
+     *                 case "play_place_cards" -> placeCards();
+     * */
     private String helpMessage = """
             Available Commands:
             "create_player <name>" to create a new player
@@ -46,6 +68,10 @@ public class Game {
             "draw <player_name> <deck_name>" draw a random card to add to deck
             "battle_deck <player_name> <deck_name>" create a battle deck
             "print <player_name>" print player by name
+            "play <deck_name>" starts a game with deck
+            "play_start" start a game
+            "play_show_cards" show the cards in the game
+            "play_place_cards" place the cards in the hand of the game.
             "exit", "!q" to quit
             "help" print this help text""";
 
@@ -63,6 +89,7 @@ public class Game {
         cardGenerator = new CardProxy();
         battleDeckCreator = new BattleDeckCreator(cardGenerator);
         cli = new CommandLineInterface(System.in, System.out);
+
     }
 
     /**
@@ -101,6 +128,7 @@ public class Game {
                 case "draw" -> draw(input);
                 case "battle_deck" -> battleDeck(input);
                 case "print" -> print(input);
+                case "play_start" -> setupBoard(input);
                 case "exit", "!q" -> exit = true;
                 case "help" -> cli.printLine(helpMessage);
                 default -> {
@@ -112,6 +140,50 @@ public class Game {
         LOGGER.info("User quitting application.");
         cli.printLine("Bye!");
     }
+
+
+    /**
+     * Handles the game board
+     *
+     * @param input user input to the command
+     * */
+    public void setupBoard(String input) {
+        String[] uInputs = input.split(" ");
+        Deck deck = null;
+        if (uInputs.length != 2) {
+            cli.printLine("Command incorrect use \"help\" for more information");
+            return;
+        }
+        try {
+            deck = deckAccessor.getDeckByName(uInputs[1]);
+        } catch (IllegalArgumentException e) {
+            cli.printLine(String.format("Could not find Deck. %s: %s", e.getMessage(), uInputs[1]));
+            return;
+        }
+        board = new GameBoard(deck);
+        board.startGame();
+        for (Card card: new ArrayList<>(board.getHand())) {
+            if (card instanceof Monster) {
+                cli.printLine("Input A for attack mode or D for defence mode for monster " + card.getName());
+                String mode = null;
+                while (true) {
+                    mode = cli.getNextLine();
+                    if (mode.equals("A") ||  mode.equals("D")) {
+                        break;
+                    }
+                    cli.printLine(mode + " is not A or D");
+                    cli.printLine("Input A for attack mode or D for defence mode for monster" + card.getName());
+                }
+                if (mode.equals("A")) {
+                    ((Monster) card).setCardPosition(CardPosition.ATTACK);
+                } else {
+                    ((Monster) card).setCardPosition(CardPosition.DEFEND);
+                }
+            }
+            board.playCard(card);
+        }
+    }
+
 
     /**
      * Functionality for the create_player command
