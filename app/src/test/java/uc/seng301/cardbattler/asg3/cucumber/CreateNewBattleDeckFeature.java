@@ -22,12 +22,8 @@ import java.util.Iterator;
 import java.util.logging.Level;
 
 public class CreateNewBattleDeckFeature {
-    private SessionFactory sessionFactory;
     private PlayerAccessor playerAccessor;
     private DeckAccessor deckAccessor;
-
-    private CardAccessor cardAccessor;
-    private CardService cardGeneratorSpy;
 
     private CommandLineInterface cli;
 
@@ -42,11 +38,10 @@ public class CreateNewBattleDeckFeature {
         java.util.logging.Logger.getLogger("org.hibernate").setLevel(Level.SEVERE);
         Configuration configuration = new Configuration();
         configuration.configure();
-        sessionFactory = configuration.buildSessionFactory();
+        SessionFactory sessionFactory = configuration.buildSessionFactory();
         playerAccessor = new PlayerAccessor(sessionFactory);
         deckAccessor = new DeckAccessor(sessionFactory);
-        cardAccessor = new CardAccessor(sessionFactory);
-        cardGeneratorSpy = Mockito.spy(new CardService());
+        CardService cardGeneratorSpy = Mockito.spy(new CardService());
 
 
         cli = Mockito.mock(CommandLineInterface.class);

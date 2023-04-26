@@ -51,7 +51,7 @@ public class Game {
         return battleDeckCreator;
     }
 
-    private String welcomeMessage = """
+    private final String welcomeMessage = """
             ######################################################
                          Welcome to Yu-Gi-Oh! Clone App
             ######################################################""";
@@ -61,7 +61,7 @@ public class Game {
      *                 case "play_show_cards" -> playingShowCards();
      *                 case "play_place_cards" -> placeCards();
      * */
-    private String helpMessage = """
+    private final String helpMessage = """
             Available Commands:
             "create_player <name>" to create a new player
             "create_deck <player_name> <deck_name>" create a deck with <deck_name> for player <player_name>
@@ -69,9 +69,6 @@ public class Game {
             "battle_deck <player_name> <deck_name>" create a battle deck
             "print <player_name>" print player by name
             "play <deck_name>" starts a game with deck
-            "play_start" start a game
-            "play_show_cards" show the cards in the game
-            "play_place_cards" place the cards in the hand of the game.
             "exit", "!q" to quit
             "help" print this help text""";
 
@@ -128,7 +125,7 @@ public class Game {
                 case "draw" -> draw(input);
                 case "battle_deck" -> battleDeck(input);
                 case "print" -> print(input);
-                case "play_start" -> setupBoard(input);
+                case "play" -> setupBoard(input);
                 case "exit", "!q" -> exit = true;
                 case "help" -> cli.printLine(helpMessage);
                 default -> {
